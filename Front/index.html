@@ -2,25 +2,16 @@
 <html lang="en">
 
 <head>
-
-    <meta charset="UTF-8">
-
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
-
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Student Registration</title>
-
     <!-- CSS -->
-    <link rel="stylesheet" href="styles.css">
-
+    <link rel="stylesheet" href="styles.css" />
 </head>
 
 <body>
 
     <div class="container">
-
         <h1>Student Registration</h1>
 
         <form id="studentForm">
@@ -31,7 +22,7 @@
                 id="name"
                 placeholder="Enter your name"
                 required
-            >
+            />
 
             <!-- Email -->
             <input
@@ -39,7 +30,7 @@
                 id="email"
                 placeholder="Enter your email"
                 required
-            >
+            />
 
             <!-- Course -->
             <input
@@ -47,20 +38,17 @@
                 id="course"
                 placeholder="Enter your course"
                 required
-            >
+            />
 
             <!-- Terms -->
             <div class="terms-container">
-
                 <input
                     type="checkbox"
                     id="terms"
-                >
-
+                />
                 <label for="terms">
-                    I accept the Terms & Conditions
+                    I accept the Terms &amp; Conditions
                 </label>
-
             </div>
 
             <!-- Submit Button -->
@@ -69,18 +57,8 @@
                 id="submitBtn"
                 disabled
             >
-
-                <span id="buttonText">
-                    Register
-                </span>
-
-                <span
-                    id="spinner"
-                    class="hidden"
-                >
-                    ⏳
-                </span>
-
+                <span id="buttonText">Register</span>
+                <span id="spinner" class="hidden">⏳</span>
             </button>
 
         </form>
@@ -90,7 +68,7 @@
 
     </div>
 
-    <!-- JavaScript -->
+    <!-- JavaScript — must be at bottom so DOM is ready -->
     <script src="form-handler.js"></script>
 
 </body>

@@ -1,114 +1,93 @@
-const form = document.getElementById("studentForm");
+// =============================================================
+//  form-handler.js  —  Student Registration
+//  Plain JavaScript — works directly in index.html
+// =============================================================
 
-const spinner = document.getElementById("spinner");
+(function () {
+  'use strict';
 
-const buttonText = document.getElementById("buttonText");
+  const form      = document.getElementById('studentForm');
+  const nameEl    = document.getElementById('name');
+  const emailEl   = document.getElementById('email');
+  const courseEl  = document.getElementById('course');
+  const termsEl   = document.getElementById('terms');
+  const submitBtn = document.getElementById('submitBtn');
+  const btnText   = document.getElementById('buttonText');
+  const spinner   = document.getElementById('spinner');
+  const messageEl = document.getElementById('message');
 
-const submitBtn = document.getElementById("submitBtn");
+  // ── Enable / disable button based on checkbox ─────────────
+  termsEl.addEventListener('change', () => {
+    submitBtn.disabled = !termsEl.checked;
+  });
 
-const message = document.getElementById("message");
+  // ── Form submit ───────────────────────────────────────────
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    messageEl.textContent = '';
+    messageEl.style.color = '';
 
-const termsCheckbox = document.getElementById("terms");
-
-/* -------------------------------- */
-/* ENABLE BUTTON WHEN TERMS CHECKED */
-/* -------------------------------- */
-
-termsCheckbox.addEventListener("change", function () {
-
-    submitBtn.disabled = !termsCheckbox.checked;
-});
-
-/* ---------------- */
-/* FORM SUBMISSION  */
-/* ---------------- */
-
-form.addEventListener("submit", async function (event) {
-
-    event.preventDefault();
-
-    // Clear old message
-    message.innerText = "";
-
-    // Get values
-    const name = document.getElementById("name").value;
-
-    const email = document.getElementById("email").value;
-
-    const course = document.getElementById("course").value;
-
-    // Validate checkbox
-    if (!termsCheckbox.checked) {
-
-        message.style.color = "red";
-
-        message.innerText =
-            "You must accept the Terms & Conditions.";
-
-        return;
-    }
-
-    // Create object
-    const studentData = {
-        name,
-        email,
-        course
+    const payload = {
+      name:   nameEl.value.trim(),
+      email:  emailEl.value.trim(),
+      course: courseEl.value.trim(),
     };
 
-    /* ---------------- */
-    /* START LOADING    */
-    /* ---------------- */
-
-    spinner.classList.remove("hidden");
-
-    buttonText.innerText = "Submitting...";
-
-    submitBtn.disabled = true;
-
-    try {
-
-        // Send data to backend
-        const response = await fetch(
-            "http://127.0.0.1:5000/submit",
-            {
-                method: "POST",
-
-                headers: {
-                    "Content-Type": "application/json"
-                },
-
-                body: JSON.stringify(studentData)
-            }
-        );
-
-        const result = await response.json();
-
-        // Success message
-        message.style.color = "green";
-
-        message.innerText = result.message;
-
-        // Reset form
-        form.reset();
-
-        // Disable button again
-        submitBtn.disabled = true;
-
-    } catch (error) {
-
-        console.error(error);
-
-        message.style.color = "red";
-
-        message.innerText =
-            "Server error. Please try again.";
+    // Client-side validation
+    if (!payload.name) {
+      showMessage('Please enter your name.', 'red');
+      nameEl.focus();
+      return;
+    }
+    if (!payload.email) {
+      showMessage('Please enter your email.', 'red');
+      emailEl.focus();
+      return;
+    }
+    if (!payload.course) {
+      showMessage('Please enter your course.', 'red');
+      courseEl.focus();
+      return;
     }
 
-    /* ---------------- */
-    /* STOP LOADING     */
-    /* ---------------- */
+    // Set loading state
+    setLoading(true);
 
-    spinner.classList.add("hidden");
+    try {
+      const response = await fetch('/submit', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify(payload),
+      });
 
-    buttonText.innerText = "Register";
-});
+      const result = await response.json();
+
+      if (response.ok) {
+        showMessage(result.message || 'Registered successfully!', 'green');
+        form.reset();
+        submitBtn.disabled = true;
+      } else {
+        showMessage(result.message || 'Something went wrong. Please try again.', 'red');
+      }
+
+    } catch (err) {
+      console.error(err);
+      showMessage('Network error. Please check your connection and try again.', 'red');
+    }
+
+    setLoading(false);
+  });
+
+  // ── Helpers ───────────────────────────────────────────────
+  function setLoading(isLoading) {
+    submitBtn.disabled  = isLoading;
+    btnText.textContent = isLoading ? 'Submitting...' : 'Register';
+    spinner.classList.toggle('hidden', !isLoading);
+  }
+
+  function showMessage(text, color) {
+    messageEl.textContent = text;
+    messageEl.style.color = color;
+  }
+
+})();
