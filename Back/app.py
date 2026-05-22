@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 from dotenv import load_dotenv
 
@@ -17,8 +17,19 @@ EMAIL_PASS = os.getenv("EMAIL_PASS")
 # -------------------------
 # INIT FLASK APP
 # -------------------------
-app = Flask(__name__)
+app = Flask(__name__, static_folder=".")
 CORS(app)
+
+# -------------------------
+# SERVE FRONTEND FILES
+# -------------------------
+@app.route("/")
+def home():
+    return send_from_directory(".", "index.html")
+
+@app.route("/<path:filename>")
+def static_files(filename):
+    return send_from_directory(".", filename)
 
 # -------------------------
 # API ROUTE
@@ -28,35 +39,53 @@ def submit():
 
     data = request.get_json()
 
-    name = data.get("name")
-    email = data.get("email")
-    course = data.get("course")
+    if not data:
+        return jsonify({
+            "message": "Invalid request. No data received."
+        }), 400
+
+    name   = data.get("name", "").strip()
+    email  = data.get("email", "").strip()
+    course = data.get("course", "").strip()
 
     # -------------------------
     # VALIDATION
     # -------------------------
-    if not name or not email or not course:
-        return jsonify({
-            "message": "All fields are required."
-        }), 400
+    if not name:
+        return jsonify({"message": "Please enter your name."}), 400
+
+    if not email:
+        return jsonify({"message": "Please enter your email."}), 400
+
+    if not course:
+        return jsonify({"message": "Please enter your course."}), 400
 
     # -------------------------
     # EMAIL CONTENT
     # -------------------------
-    subject = "Registration Successful"
+    subject = f"Registration Successful — {course}"
 
     body = f"""
 Hello {name},
 
 You have successfully registered for: {course}
 
-Thank you for registering.
+Here are your registration details:
+
+  Name:    {name}
+  Email:   {email}
+  Course:  {course}
+
+Thank you for registering. We will be in touch shortly.
+
+---
+This is an automated confirmation email.
 """
 
-    msg = MIMEText(body)
-    msg["Subject"] = subject
-    msg["From"] = EMAIL_USER
-    msg["To"] = email
+    msg             = MIMEText(body)
+    msg["Subject"]  = subject
+    msg["From"]     = EMAIL_USER
+    msg["To"]       = email
 
     # -------------------------
     # SEND EMAIL VIA GMAIL SMTP
@@ -68,19 +97,25 @@ Thank you for registering.
         server.send_message(msg)
         server.quit()
 
+        print(f"[SUBMIT] ✅ Sent — {name} | {email} | {course}")
+
         return jsonify({
-            "message": "Registration successful! Email sent."
+            "message": "Registration successful! A confirmation email has been sent."
         })
 
     except Exception as e:
-        print("EMAIL ERROR:", e)
+        print(f"[SUBMIT] ❌ Email error: {e}")
 
         return jsonify({
-            "message": "Saved but email failed."
+            "message": "Registered but email could not be sent. Please contact us directly."
         }), 500
 
 # -------------------------
 # RUN SERVER
 # -------------------------
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(
+        host="0.0.0.0",
+        port=5000,
+        debug=False
+    )
